@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<title>饿了么UI</title>
+		<script src="./js/vue.js"></script>
+		<script src="./js/index.js"></script>
+		<link rel="stylesheet" href="./css/index.css">
+		<link rel="stylesheet" href="./css/elMe.css">
+	</head>
+	<body style="overflow=hidden;" onload="isLoginBaidu()">
+		<div id="app">
+			<!-- 捐助页面 -->
+			<el-dialog title="感谢捐助" :visible.sync="sponsorDlgShow" width="45%">
+				<div class="Sponsor-div">
+					<img src="image/orcode.png" />
+				</div>
+			</el-dialog>
+			<!-- 关于页面 -->
+			<el-dialog title="关于" :visible.sync="AbuotDlgShow" width="40%">
+				<div class="About-div">
+					<img class="logo-big" src="image/Logo_Big.png"  v-on:contextmenu="UserImageRight" />
+					<div class="About-right-div">
+						<p style="padding-top: 10px; font-family:'Cursive';font-size:100%;">飞鸟 by Cool</p>
+						<p style="padding-top: 10px;">  版本 1.0.1</p>
+						<p style="padding-top: 10px;"><a href="https://www.x5tl.com/">https://www.x5tl.com/</a></p>
+						<p style="padding-top: 10px;">特别鸣谢</a></p>
+						<p style="padding-top: 10px;"><a href="https://www.52pojie.cn/">吾爱破解论坛</a></p>
+					</div>
+					<div style="position: absolute; float: right;top: 230px; " >
+						<p style="color: red;">本软件仅供学习交流使用，不得用于商业用途！软件永久免费</p>
+					</div>
+				</div>
+			</el-dialog>
+			<!-- 检测更新页面 -->
+			<el-dialog title="检测更新" :visible.sync="UpdateDlgShow" width="40%">
+				<div class="update-div">
+				<h3 style="padding-left: 90px; padding-bottom: 10px;">当前版本:{{currentversion}}</h3>
+				<h3 style="padding-left: 90px; padding-bottom: 10px;">最新版本:{{newVersion}}</h3>
+				<el-input
+				  type="textarea"
+				  :rows="10"
+				  placeholder=""
+				  :disabled="false"
+				  @change="update_string_change"
+				  :readonly="true"
+				  v-model="update_info_msg">
+				</el-input>
+				<div class="update-div" style="padding-top: 10px;">
+					<el-button type="primary" :disabled="is_updtate" style=" padding-top: 10px;">在线更新</el-button>
+					<el-button plain :disabled="is_updtate" style="float: right; padding-top: 10px;">手动下载</el-button>
+				</div>
+				</div>
+			</el-dialog>
+			<div class="menu-pop" v-if="is_show"v-bind:style="{left:MouX,top:MouY}">
+				<el-dropdown-item onclick="app.is_show =!app.is_show;">设置</el-dropdown-item>
+				<el-dropdown-item onclick="app.sponsor();">捐助</el-dropdown-item>
+				<el-dropdown-item onclick="app.is_show =!app.is_show;">帮助</el-dropdown-item>
+				<el-dropdown-item onclick="app.AboutFunc();">关于</el-dropdown-item>
+				<el-dropdown-item onclick="app.is_update_func();">检测更新</el-dropdown-item>
+				<el-dropdown-item onclick="app.is_show =!app.is_show;">退出</el-dropdown-item>
+			</div>
+			<div class="connect">
+				<div class="logo-img" style="-webkit-app-region: drag;">
+					<img src="image/logo.png"  v-on:contextmenu="UserImageRight" style="padding: 5px,5px,1px,5px;" width="32" height="32" />
+					<span style="padding-top: 5px; position: absolute;">飞鸟</span>
+				</div>
+				<div class="dragRect" style="-webkit-app-region: drag; width: 790px;">
+					<div style="width: 790px; height: 80px; background-color:#EEF0F6;"></div>
+				</div>
+				<div class="titleImg" style="-webkit-app-region: drag" >
+					<img v-if="tablelistisShwo"  class="Image-head" v-on:contextmenu="UserImageRight" style="-webkit-app-region: drag"  v-bind:src="UerheadImage" v-bind:width="UserHeaderWidthHeight" v-bind:height="UserHeaderWidthHeight" />
+				    <a v-if="tablelistisShwo" style="float: right; padding-top: 20px; padding-left: 10px;" href="#home">{{UserName}}<a/>
+					<p v-if="tablelistisShwo"style="margin: 0; padding-left: 30px;" ><a v-if="tablelistisShwo" href="#home" @mousedown="logout" style="color: #5DAF34;">退出账号<a/></p>
+				</div>
+				<div class="group-control" style="-webkit-app-region: drag" >
+					<div class="menu-div" >
+						<img class="Menu-btn" @mousedown.stop onclick="app.showMenuDlg(event)" title="更多" src="./image/menu.png" width="16" height="16" onMouseOver="this.src='image/menu_hover.png'" onMouseOut="this.src='image/menu.png'"/>
+					</div>
+					<button class="btn-close" @mousedown.stop onclick="sysMenuCallBack('close')" title="关闭窗口"></button>
+					<button class="btn-max" @mousedown.stop onclick="sysMenuCallBack('max')" title="最大化"></button>
+					<button class="btn-min" @mousedown.stop onclick="sysMenuCallBack('min')" title="最小化"></button>
+				</div>
+			</div>
+			<div id="header">
+				<div class="subject" @click="MainClick">
+				<!-- TAB页面关联 -->
+				<template>
+					<!-- 右键弹出菜单 -->
+					<u id="right-click-menu" v-if="viewMenu" v-bind:style="{width:'102px',position:'absolute',left:MenuX,top:MenuY}">
+						<el-button-group>
+							<el-col>
+								<li @click="baiduDown"><el-button type="text"size="small">下 载</el-button></li>
+								<li @click="shareUrl"><el-button type="text"size="small" >分 享</el-button></li>
+								<li @click="DeleteUrl"><el-button type="text"size="small">删 除</el-button></li>
+								<li @click="RenameFile" ><el-button type="text"size="small">重 命 名</el-button></li>
+							</el-col>
+						</el-button-group>
+					</u>
+				</template>
+				<!-- 分享链接界面 -->
+				<template>
+					<el-dialog :title="dlgShareTitle" :visible.sync="dlgShareView">
+							<p>
+							<span style="color:#8B909E;padding-left: 30px; padding-right: 30px;">分享形式</span>
+							<el-radio v-model="dlgShareRadio" label="1">有提取码</el-radio>
+							<span>仅限拥有提取码者可查看</span>
+							</p>
+							<p>
+								<el-radio style="padding-left: 120px;" v-model="dlgShareRadio" label="2">无提取码</el-radio>
+								<span>无需提取码即可查看</span>
+							</p>
+						<template>
+						 <span style="color:#8B909E;padding-left: 30px; padding-right: 30px;">有效期</span>
+						  <el-select style="padding-left: 10px;" v-model="dlgShareSelect" placeholder="请选择">
+							<el-option
+							  v-for="item in options"
+							  :key="item.value"
+							  :label="item.label"
+							  :value="item.value">
+							</el-option>
+						 </el-select>
+					</template>
+					<span slot="footer" class="dialog-footer">
+						<el-button type="primary" @click="createShareUrl">创建链接</el-button>
+						<el-button @click="dlgShareView = false">取 消</el-button>
+					 </span>
+					</el-dialog>
+				</template>
+				<!-- 分享成功后的链接界面 -->
+				<template>
+					<el-dialog :title="dlgShareTitle" :visible.sync="dlgShareSucceed">
+						<span>
+							<el-input autosize v-model="dlgShareSucceedUrl"></el-input>
+						</span>
+						<span slot="footer" class="dialog-footer">
+							<el-button type="primary" @click="CopyShareUrl">复制链接</el-button>
+						</span>
+					</el-dialog>
+				</template>
+				<!-- 重命名文件界面 -->
+				<template>
+					<el-dialog :title="dlgRenameTitle" :visible.sync="dlgRename">
+						<span>
+							<el-input autosize v-model="dlgRenameNewName"></el-input>
+						</span>
+						<span slot="footer" class="dialog-footer">
+							<el-button type="primary" @click="RenameFunc(dlgRenameNewName)">确定</el-button>
+						</span>
+					</el-dialog>
+				</template>
+					<el-tabs @tab-click="tab_select_click" v-model="activeName">
+						<!-- 我的网盘 -->
+						<el-tab-pane name="disk">
+							<span slot="label"><i class="el-icon-upload"></i>我的网盘</span>
+							<div id="tablelist" v-if="tablelistisShwo">
+									<template>
+									<el-table :data="baiduUserInfo"v-loading="loading" style="width: 100% "
+									 @row-click="baiduUserInfoRowClick"
+									 @row-contextmenu="baiduUserinfoRowRightClick"
+									 :cell-style="{cursor:'pointer'}"
+									  highlight-current-row
+									 ref="BaiduUserRefTable"
+									 @selection-change="BaiduUserinfoTableChange"
+									  height="450" >
+										<el-table-column type="selection" height="450">
+										</el-table-column>
+										<el-table-column fixed prop="name" label="文件名" width="300" align="left">
+											<template slot="header" slot-scope="scope">
+												 <el-button type="text" @click="pathlistClick('/')">返回根目录</el-button>
+												 <i class="el-icon-arrow-right"></i>
+												 <el-button type="text" @click="pathlistClick(supperPath)">返回上级目录</el-button>
+											</template>
+											<template slot-scope="scope" >
+												<img v-if="scope.row.isdir" src="./image/FolderType.png" width="20px" height="20px"/>
+												<img v-else-if="scope.row.FileType==='.zip' || scope.row.FileType==='.rar' " src="./image/RarType.png" width="20px" height="20px"/>
+												<img v-else-if="scope.row.FileType==='.pdf'" src="./image/PdfType.png" width="20px" height="20px"/>
+												<img v-else-if="scope.row.FileType==='.txt'" src="./image/TxtType.png" width="20px" height="20px"/>
+												<img v-else-if="scope.row.FileType==='.ppt'" src="./image/PptType.png" width="20px" height="20px"/>
+												<img v-else-if="scope.row.FileType==='.doc' || scope.row.FileType==='.docx' " src="./image/DocType.png" width="20px" height="20px"/>
+												<img v-else-if="scope.row.nCategory ===2" src="./image/MusicType.png" width="20px" height="20px"/>
+												<img v-else-if="scope.row.nCategory ===1" src="./image/VideoType.png" width="20px" height="20px"/>
+												<img v-else-if="scope.row.nCategory ===3" src="./image/ImgType.png" width="20px" height="20px"/>
+												<img v-else-if="scope.row.nCategory ===5" src="./image/ExeType.png" width="20px" height="20px"/>
+												<img v-else src="./image/OtherType.png" width="20px" height="20px"/>
+												<span style="margin-left: 10px;cursor:pointer;">{{ scope.row.name }}</span>
+											</template>
+										</el-table-column>
+										<el-table-column prop="Size" label="大小" width="200">
+										</el-table-column>
+										<el-table-column prop="ChangeTime" label="修改时间" width="120">
+										</el-table-column>
+									</el-table>
+								</template>
+							</div>
+							<!-- 放登录按钮的 -->
+							<div class="BdLogin-bt" v-if="!tablelistisShwo">
+								<el-button type="primary" @click="loginBaidu" round>登录百度网盘</el-button>
+							</div>
+						</el-tab-pane>
+						<!-- 我的下载 -->
+						<el-tab-pane name="download">
+							<span slot="label"><i class="el-icon-download"></i>我的下载</span>
+							<!-- 下载界面需要有侧边中间部分 -->
+							<el-container>
+								<!-- 左边区域 -->
+							  <el-aside width="180px">
+							  <el-menu  default-active="1" @open="handleOpen" @close="handClose" style="overflow:hidden;">
+								   <el-submenu index="1">
+									   <template slot="title" >
+									  <i class="el-icon-loading"></i>
+									  <span>正在下载</span>
+									</template>
+									</el-submenu>
+									<el-submenu index="2">
+										<template slot="title">
+										  <i class="el-icon-success"></i>
+										  <span>已完成</span>
+										  <el-badge :value="completedCount" v-if="completedCount" style="margin-top: 0px; margin-right: 40px; padding-left: 40px;;" class="item">
+										  </el-badge>
+										</template>
+									</el-submenu>
+									<el-submenu index="3">
+										 <template slot="title" >
+										  <i class="el-icon-error"></i>
+										  <span>下载失败</span>
+										   <el-badge :value="errorCount" v-if="errorCount" style="margin-top: 0px; margin-right: 40px; padding-left: 40px;;" class="item">
+										  </el-badge>
+										</template>
+									</el-submenu>
+							  </el-menu>
+							  </el-aside>
+							  <!-- 左边区域 -->
+							  <el-main>
+								  <!-- 点击下载链接按钮弹出框 -->
+								  <el-dialog
+								  title="分享链接下载"
+								  width="50%"
+								  :modal="false"
+								  :visible.sync="ShareDownDlg" :before-close="ShareDownDlgClose">
+									<p style="margin: 0px; padding: 0px;">
+									  <span style="padding-left: 0px; padding-top: 5px;"> 输入分享链接:</span>
+									  <el-input
+									  placeholder="请输入分享链接"
+									  v-model="ShareDownInput"
+									  style="width: 60%;"
+									  autosize>
+									</el-input>
+									<span slot="header" class="dialog-header">
+									<el-button type="primary" @click="ParseDownFileUrl">分 析</el-button>
+									</span>
+								  </p>
+									<div class="shareList-data">
+										<el-table :data="DownloadShareListdata" :border=true height="250" @selection-change="DownloadShareListSelectionChange"
+										 @row-click="ShareDownloadRowClick"
+										>
+											<el-table-column
+											  type="selection"
+											  width="30">
+											</el-table-column>
+											<el-table-column fixed prop="name" label="文件名" width="200" align="left" >
+												<template slot="header" slot-scope="scope">
+												<!-- <img src="image/forward.png" title="前进" onMouseOver="this.src='image/forward_hover.png'" onMouseOut="this.src='image/forward.png'" style="padding: 10px;" width="16" height="16"  /> -->
+												<!-- <img src="image/home.png" title="主页" onMouseOver="this.src='image/home_hover.png'" onMouseOut="this.src='image/home.png'" style="padding: 10px;" width="16" height="16"  /> -->
+												<img src="image/back.png" title="返回" @click="RetRootShare"  onMouseOver="this.src='image/back_hover.png'" onMouseOut="this.src='image/back.png'" style="padding: 10px;" width="16" height="16"  />
+												</template>
+												<template slot-scope="scope" >
+													<img v-if="scope.row.isdir" src="./image/FolderType.png" width="16px" height="16px"/>
+													<img v-else-if="scope.row.FileType==='.zip' || scope.row.FileType==='.rar' " src="./image/RarType.png" width="16px" height="16px"/>
+													<img v-else-if="scope.row.FileType==='.pdf'" src="./image/PdfType.png" width="16px" height="16px"/>
+													<img v-else-if="scope.row.FileType==='.txt'" src="./image/TxtType.png" width="16px" height="16px"/>
+													<img v-else-if="scope.row.FileType==='.ppt'" src="./image/PptType.png" width="16px" height="16px"/>
+													<img v-else-if="scope.row.FileType==='.doc' || scope.row.FileType==='.docx' " src="./image/DocType.png" width="16px" height="16px"/>
+													<img v-else-if="scope.row.nCategory ===2" src="./image/MusicType.png" width="16px" height="16px"/>
+													<img v-else-if="scope.row.nCategory ===1" src="./image/VideoType.png" width="16px" height="16px"/>
+													<img v-else-if="scope.row.nCategory ===3" src="./image/ImgType.png" width="16px" height="16px"/>
+													<img v-else-if="scope.row.nCategory ===5" src="./image/ExeType.png" width="16px" height="16px"/>
+													<img v-else src="./image/OtherType.png" width="16px" height="16px"/>
+													<span style="margin-left: 10px;overflow: hidden;cursor:pointer;">{{ scope.row.name }}</span>
+												</template>
+											</el-table-column>
+											<el-table-column prop="Size" label="大小" width="100"></el-table-column>
+											<el-table-column prop="ChangeTime" label="修改日期"></el-table-column>
+										</el-table>
+									</div>
+									  <span slot="footer" class="dialog-footer" style="padding-top: 5px;">
+										<!-- <el-button @click="ShareDownDlg = false">取 消</el-button> -->
+										<el-button type="primary" @click="DownloadShareFileList">下 载</el-button>
+									  </span>
+								  </el-dialog>
+								  <!-- 下载完成的列表 -->
+								  <div id="downloadSussedList" v-show="downSussedShow">
+								  	<template>
+								  			  <el-table
+								  				ref="downloadSussedTable"
+								  				:data="downloadSussed"
+								  				tooltip-effect="dark"
+								  				style="width: 100%"
+								  				height="450"
+								  				@selection-change="downloadSussedSelectionChange">
+								  				<el-table-column
+								  				  fixed
+								  				  type="selection"
+								  				  width="55">
+								  				</el-table-column>
+								  				<el-table-column
+								  				  prop="name"
+								  				  label="文件名"
+								  				  width="200">
+								  				</el-table-column>
+								  				<el-table-column
+								  				  prop="ChangeTime"
+								  				width="100" >
+												</el-table-column>
+												<el-table-column
+												 align="right">
+												 <template slot="header" slot-scope="scope">
+												  <el-button size="small" @click="CleanListSucceed">清空列表</el-button>
+												   <el-button size="small" @click="DeleteListSucceed">删除</el-button>
+												  </template>
+												  	<template slot-scope="scope">
+												  	<!-- <el-button size="mini" @click="handleEdit(scope.$index, scope.row)">暂停</el-button>
+												  	<el-button size="mini" type="danger" @click="handleDelete(scope.$index, scope.row)">删除</el-button> -->
+												  	<img src="image/openfile.png" title="打开文件" @click="OpenFileSucceed(scope.$index, scope.row)" onMouseOver="this.src='image/openfile_hover.png'" onMouseOut="this.src='image/openfile.png'" style="padding: 10px;" width="20" height="20"  />
+												  	<img src="image/folder.png" title="打开所在文件夹" @click="OpenFolderSucceed(scope.$index, scope.row)" onMouseOver="this.src='image/folder_hover.png'" onMouseOut="this.src='image/folder.png'" style="padding: 10px;" width="20" height="20"  />
+												  	<img src="image/clean.png" title="清除记录" @click="CleanSucceed(scope.$index,downloadSussed)" onMouseOver="this.src='image/clean_hover.png'" onMouseOut="this.src='image/clean.png'" style="padding: 10px;" width="20" height="20"  />
+												  	
+												  </template>
+								  				</el-table-column>
+								  			  </el-table>
+								  	</template>
+								  </div>
+								  <!-- 下载失败文件列表 -->
+								  <div id="downloadErrorinfo" v-show="downErrorShow">
+								  	<template>
+								  			  <el-table
+								  				ref="multipleTable"
+								  				:data="downloadErrorList"
+								  				tooltip-effect="dark"
+								  				style="width: 100%"
+								  				height="450"
+								  				@selection-change="handleSelectionChange">
+								  				<el-table-column
+								  				  fixed
+								  				  type="selection"
+								  				  width="55">
+								  				</el-table-column>
+								  				<el-table-column
+								  				  prop="name"
+								  				  label="文件名"
+								  				  width="200">
+								  				</el-table-column>
+												<el-table-column
+												  prop="errorMessage"
+												  label="错误原因"
+												  width="200">
+												</el-table-column>
+								  				<el-table-column
+								  				  prop="ChangeTime"
+								  				  show-overflow-tooltip align="right">
+								  				  <template slot="header" slot-scope="scope">
+								  				  <el-button size="small" @click="CleanDownloadErrorList">清空列表</el-button>
+								  				   <el-button size="small" @click="DeleteDownloadErrorList">删除</el-button>
+								  				  </template>
+								  				</el-table-column>
+								  			  </el-table>
+								  	</template>
+								  </div>
+								  <!-- 正在下载列表 -->
+								  <div id="downloadlistinfo" v-show="downlistShow">
+								  	<template>
+								  		<el-table :data="downloadListinfo" style="width: 100%" height="450" class="tabel_box">
+								  			<el-table-column align="left" width="160" >
+												<template slot="header" slot-scope="scope">
+												<el-button type ="primary" size="small" @click="downShareFile">下载分享链接</el-button>
+												</template>
+								  				<template slot-scope="scope">
+								  					<i class="el-icon-time"></i>
+								  					<span style="margin-left: 5px;overflow: hidden;text-overflow: ellipsis;white-space:nowrap;width:150px;">{{ scope.row.name }}</span>
+								  				</template>
+								  			</el-table-column>
+								  			<el-table-column label="进度" width="280">
+								  				<template slot-scope="scope">
+								  					<!-- 进度条 -->
+								  					<div class="progress_box">
+													<el-progress style="width: 80px;" :text-inside="false" :show-text="false" :percentage="scope.row.progress":stroke-width="10"></el-progress>
+													<span style="float: right;" v-if="scope.row.status==='active'"> {{scope.row.downloadSpeed}} /s</span>
+													</div>
+								  					<p height="5px" v-if="scope.row.status==='active'">当前连接：{{scope.row.connections}} <span v-if="scope.row.isRateLimiting && parseInt(scope.row.connections) < 5"style="padding-left: 15px; color: red;" >当前账号可能已被限速</span></p>
+								  					<p height="5px" v-else>等待中..</p>
+								  				</template>
+								  			</el-table-column>
+								  			<el-table-column align="right">
+								  			<template slot="header" slot-scope="scope">
+								  	       <el-button round size="mini" @click="allStart" >全部开始</el-button>
+								  				 <el-button type="warning" @click="allPaused" round size="mini">全部暂停</el-button>
+								  				 <el-button type="danger" @click="allDeleate" round size="mini">全部删除</el-button>
+								  	      </template>
+								  				<template slot-scope="scope">
+								  					<!-- <el-button size="mini" @click="handleEdit(scope.$index, scope.row)">暂停</el-button>
+								  					<el-button size="mini" type="danger" @click="handleDelete(scope.$index, scope.row)">删除</el-button> -->
+													<img v-if="scope.row.status==='active'" src="image/pause.png" title="暂停" @click="PauseRow(scope.$index, scope.row)" onMouseOver="this.src='image/pause_hover.png'" onMouseOut="this.src='image/pause.png'" style="padding: 10px;"  width="20" height="20"  />
+													<img v-else="scope.row.status==='waiting'" src="image/start.png" title="开始" @click="StartRow(scope.$index, scope.row)" onMouseOver="this.src='image/start_hover.png'" onMouseOut="this.src='image/start.png'"  style="padding: 10px;"  width="20" height="20"  />
+													<img v-else="scope.row.status==='paused'" src="image/start.png" title="开始" @click="StartRow(scope.$index, scope.row)" onMouseOver="this.src='image/start_hover.png'" onMouseOut="this.src='image/start.png'" style="padding: 10px;"  width="20" height="20"  />
+													<img src="image/delete.png" onMouseOver="this.src='image/delete_hover.png'" @click="DeleteRow(scope.$index, scope.row)" title="删除" onMouseOut="this.src='image/delete.png'" style="padding: 10px;" width="20" height="20"  />
+													<img src="image/folder.png" onMouseOver="this.src='image/folder_hover.png'" @click="OpenFolderRow(scope.$index, scope.row)" title="打开所在文件夹" onMouseOut="this.src='image/folder.png'" style="padding: 10px;" width="20" height="20"  />
+													
+								  				</template>
+								  			</el-table-column>
+								  		</el-table>
+								  	</template>
+								  </div>
+							  </el-main>
+							  <!-- 中间区域 -->
+							</el-container>
+						</el-tab-pane>
+						<!-- 选择要保存的路径 -->
+						<template>
+							<el-dialog title="保存到" :visible.sync="offline_save_dlg" :modal="false" >
+								<div class="offline_tree_div" style="height:300px; overflow-y: auto;">
+								 <el-tree
+								  :data="offline_tree_data"
+								  default-expand-all
+								  @current-change="TreeNodeSelect"
+								  :expand-on-click-node="false" >		  
+								  <span class="custom-tree-node" slot-scope="{ node, data }">
+									 <span><img class="node-icon" src="./image/FolderType.png" /></span>
+									<span>{{ node.label }}</span>
+								  </span>
+								</el-tree>	
+								</div>
+								<div slot="footer" class="dialog-footer">
+								<el-button type="primary" @click="selectSavePathSucceed">确 定</el-button>
+								<el-button @click="offline_save_dlg = false">关 闭</el-button>
+							</el-dialog>
+						</template>
+						<!-- 离线下载 -->
+						<template>
+							<el-dialog title="新建离线链接任务" :visible.sync="offline_dlg_show" :modal="false">
+								<div class="off-line-dlg">
+								 <p style="color:#AAB2BF;margin: 0px; padding-bottom: 10px;">填写要下载的文件链接</p>
+									<p style="padding-bottom: 10px;">文件链接：</p>
+									  <el-input
+									  placeholder=""
+									  v-model="offline_dlg_input"
+									  style="width: 100%;"
+									  autosize>
+									</el-input>
+									 <p style="color:#AAB2BF;margin: 0px; padding-top: 10px; padding-bottom: 10px;">支持http/https/ftp/电驴/磁力链协议</p>
+									 <p>保存到：{{Offline_save_folder}}<span style="padding-left: 10px;"><el-button size="mini" @click="Modify_Offline_Save_Path">更改</el-button></span></p>
+								</div>
+								<div slot="footer" class="dialog-footer">
+								<el-button type="primary" @click="AddOfflineTask">确 定</el-button>
+								<el-button @click="offline_dlg_show = false">关 闭</el-button>
+							  </div>
+							</el-dialog>	
+						</template>
+						<el-tab-pane name="Offdownload">
+							<span slot="label"><i class="el-icon-sold-out"></i>离线下载</span>
+							<div class="off-line">
+								<el-button type="primary" size="mini" disabled>新建BT任务</el-button>
+								<el-button plain size="mini" @click="NewUrllinkClick">新建链接任务</el-button>
+								<div style="float: right;">
+									<el-button type="primary" icon="el-icon-refresh" size="mini" round @click="OffLine_refresh">刷新</el-button>
+									<el-button plain size="mini" @click="AllDeleteOffline">全部清除</el-button>
+								</div>
+								 <template>
+									<el-table
+									  :data="OffilneTable"
+									  v-loading="Offilne_loading"
+									  style="width: 100%"
+									  height="400"
+									  >
+									  <el-table-column
+										prop="name"
+										label="文件名"
+										width="280">
+									  </el-table-column>
+									  <el-table-column
+										prop="Size"
+										label="大小"
+										width="200">
+									  </el-table-column>
+									  <el-table-column
+										label="状态">
+										<template slot-scope="scope">
+											<span v-if="scope.row.status === 5" style="color: red;">下载失败</span>
+											<span v-else-if="scope.row.status === 1" >{{scope.row.progress}}</span>
+											<span v-else-if="scope.row.status === 0" >下载完成</span>
+										</template>
+									  </el-table-column>
+									   <el-table-column
+										label="操作"
+										fixed="right"
+										>
+										  <template slot-scope="scope">
+											<el-button type="text" size="small" @click="DeleteOffLineTask(scope.$index,scope.row.task_id)">清除</el-button>
+										  </template>
+									  </el-table-column>
+									</el-table>
+								</template>
+
+							</div>
+						</el-tab-pane>
+						<!-- 系统设置 -->
+						<el-tab-pane name="setting">
+							<span slot="label"><i class="el-icon-setting"></i>系统设置</span>
+						</el-tab-pane>
+					</el-tabs>
+					<!-- TAB页面结束 -->
+				</div>
+			</div>
+			<div class="footer_box">
+				<el-footer style="height: 30px;">
+					<span v-if="tablelistisShwo">{{DiskUsed}}/{{DiskTotal}}</span>
+				</el-footer>
+			</div>
+		</div>
+	</body>
+	<script  src="./js/app.js" type="text/javascript"></script>
+	<script type="text/javascript">
+		//禁用浏览器滚动条
+		document.body.parentNode.style.overflow = "hidden";
+	</script>
+</html>
