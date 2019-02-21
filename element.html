@@ -9,7 +9,7 @@
 		<link rel="stylesheet" href="./css/index.css">
 		<link rel="stylesheet" href="./css/elMe.css">
 	</head>
-	<body style="overflow=hidden;" onload="isLoginBaidu()">
+	<body style="overflow=hidden;" onload="app.appInit_func()">
 		<div id="app">
 			<!-- 捐助页面 -->
 			<el-dialog title="感谢捐助" :visible.sync="sponsorDlgShow" width="45%">
@@ -22,11 +22,11 @@
 				<div class="About-div">
 					<img class="logo-big" src="image/Logo_Big.png"  v-on:contextmenu="UserImageRight" />
 					<div class="About-right-div">
-						<p style="padding-top: 10px; font-family:'Cursive';font-size:100%;">飞鸟 by Cool</p>
+						<p style="padding-top: 10px; font-family:'Cursive';font-size:100%;">BaiduCdp by Cool</p>
 						<p style="padding-top: 10px;">  版本 1.0.1</p>
-						<p style="padding-top: 10px;"><a href="https://www.x5tl.com/">https://www.x5tl.com/</a></p>
+						<p style="padding-top: 10px;"><a href="#" onclick="OpenAssignUrl('https://www.Baiducdp.com/');">https://www.BaiduCdp.com/</a></p>
 						<p style="padding-top: 10px;">特别鸣谢</a></p>
-						<p style="padding-top: 10px;"><a href="https://www.52pojie.cn/">吾爱破解论坛</a></p>
+						<p style="padding-top: 10px;"><a href="#"  onclick="OpenAssignUrl('https://www.52pojie.cn/');">吾爱破解论坛</a></p>
 					</div>
 					<div style="position: absolute; float: right;top: 230px; " >
 						<p style="color: red;">本软件仅供学习交流使用，不得用于商业用途！软件永久免费</p>
@@ -48,8 +48,8 @@
 				  v-model="update_info_msg">
 				</el-input>
 				<div class="update-div" style="padding-top: 10px;">
-					<el-button type="primary" :disabled="is_updtate" style=" padding-top: 10px;">在线更新</el-button>
-					<el-button plain :disabled="is_updtate" style="float: right; padding-top: 10px;">手动下载</el-button>
+					<el-button type="primary" :disabled="is_updtate" @click="update_line" style=" padding-top: 10px;">在线更新</el-button>
+					<el-button plain :disabled="is_updtate" @click="update_hand" style="float: right; padding-top: 10px;">手动下载</el-button>
 				</div>
 				</div>
 			</el-dialog>
@@ -64,7 +64,7 @@
 			<div class="connect">
 				<div class="logo-img" style="-webkit-app-region: drag;">
 					<img src="image/logo.png"  v-on:contextmenu="UserImageRight" style="padding: 5px,5px,1px,5px;" width="32" height="32" />
-					<span style="padding-top: 5px; position: absolute;">飞鸟</span>
+					<span style="padding-top: 5px; position: absolute; float: left;"></span>
 				</div>
 				<div class="dragRect" style="-webkit-app-region: drag; width: 790px;">
 					<div style="width: 790px; height: 80px; background-color:#EEF0F6;"></div>

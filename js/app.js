@@ -147,13 +147,15 @@ var app = new Vue({
 				/*检测更新*/
 				UpdateDlgShow:false,
 				/*更新的内容*/
-				update_info_msg:"更新时间: 2018-11-16\r\n更新内容:\r\n1. 支持HTTP/HTTPS下载\r\n2. 新增文件清理功能\r\n3. 新增提取码查询功能",
+				update_info_msg:"",
 				/*当前版本号*/
 				currentversion:"1.0.1",
 				/*最新版本号*/
 				newVersion:"",
 				/*是否可以更新*/
-				is_updtate:true
+				is_updtate:true,
+				/*新版本下载地址*/
+				newVersionDownloadUrl:""
 				
 		}
 	},
@@ -738,10 +740,59 @@ var app = new Vue({
 		update_string_change:function(str){
 			console.log(str);
 		},
+		/*启动初始化函数*/
+		appInit_func:function(){
+			isLoginBaidu();
+			this.is_show = false;
+			let versiondata = isUpdate(this.currentversion);
+			if(versiondata === undefined){
+				this.newVersion = this.currentversion;
+				this.is_updtate = true;
+			}
+			else
+			{
+				if(versiondata==="" || versiondata==="{}"){
+					this.newVersion = this.currentversion;
+				}else{
+					this.is_updtate = false;
+					let jsondata = JSON.parse(versiondata);
+					this.newVersion = jsondata.version;
+					this.newVersionDownloadUrl = jsondata.downloadUrl;
+					this.update_info_msg = jsondata.upcontent;
+					this.UpdateDlgShow = true;
+				}
+			}
+		},
+		
 		/*检测是否需要更新*/
 		is_update_func:function(){
 			this.is_show = false;
+			let versiondata = isUpdate(this.currentversion);
+			if(versiondata === undefined){
+				this.newVersion = this.currentversion;
+				this.is_updtate = true;
+			}
+			else
+			{
+				if(versiondata==="" || versiondata==="{}"){
+					this.newVersion = this.currentversion;
+				}else{
+					this.is_updtate = false;
+					let jsondata = JSON.parse(versiondata);
+					this.newVersion = jsondata.version;
+					this.newVersionDownloadUrl = jsondata.downloadUrl;
+					this.update_info_msg = jsondata.upcontent;
+				}
+			}
 			this.UpdateDlgShow = true;
+		},
+		/*在线更新按钮被单击*/
+		update_line:function(){
+			UpdateApp(this.newVersionDownloadUrl);
+		},
+		/*手动下载按钮被单击*/
+		update_hand:function(){
+			OpenAssignUrl("https://www.baidu.com/");
 		}
 	}
 })
